@@ -104,36 +104,13 @@ int main(int argc, char** argv){
 
     vector<TLorentzVector> matched_jets;
     for (auto bs : theBS) {
-      if (inclusive_jets_vec.size() > 0) {
-	auto min = min_element(inclusive_jets_vec.begin(), inclusive_jets_vec.end(),
-			       [bs](TLorentzVector v1, TLorentzVector v2)->bool {return bs.DeltaR(v1) < bs.DeltaR(v2);});
-	if (bs.DeltaR(*min) < 0.4) {
-	  matched_jets.push_back(*min);
-	}
-      } else break;      
+      auto min = min_element(inclusive_jets_vec.begin(), inclusive_jets_vec.end(),
+			     [bs](TLorentzVector v1, TLorentzVector v2)->bool {return bs.DeltaR(v1) < bs.DeltaR(v2);});
+      if (bs.DeltaR(*min) < 0.4) {
+	matched_jets.push_back(*min);
+      }
     }
-
-    
-    // Write a report
-    cout << "Using algorithm " << jet_def.description() << endl;
-    cout << "Fastjet found " << inclusive_jets.size() << " jets with pT > 5 GeV" << endl;
-    cout << "I found " << inclusive_jets_vec.size() << " jets with pT > 20 GeV and |eta| < 4.7" << endl;
-    cout << "Resolved case!" << endl;
-    cout << "First a->bb: " << endl;
-    cout << "    b parton 1 : " << theBS[0].Eta() << " " << theBS[0].Phi() << " " << theBS[0].Pt()/1000. << endl;
-    cout << "    b jet    1 : " << matched_jets[0].Eta() << " " << matched_jets[0].Phi() << " " << matched_jets[0].Pt()/1000. << endl;
-    cout << "    b parton 2 : " << theBS[1].Eta() << " " << theBS[1].Phi() << " " << theBS[1].Pt()/1000. << endl;
-    cout << "    b jet    2 : " << matched_jets[1].Eta() << " " << matched_jets[1].Phi() << " " << matched_jets[1].Pt()/1000. << endl;
-    cout << "    a mass     : " << (theBS[0] + theBS[1]).M()/1000. << endl;
-    cout << "    dijet mass : " << (matched_jets[0] + matched_jets[1]).M()/1000. << endl;
-    cout << "Second a->bb: " << endl;
-    cout << "    b parton 1 : " << theBS[2].Eta() << " " << theBS[2].Phi() << " " << theBS[2].Pt()/1000. << endl;
-    cout << "    b jet    1 : " << matched_jets[2].Eta() << " " << matched_jets[2].Phi() << " " << matched_jets[2].Pt()/1000. << endl;
-    cout << "    b parton 2 : " << theBS[3].Eta() << " " << theBS[3].Phi() << " " << theBS[3].Pt()/1000. << endl;
-    cout << "    b jet    2 : " << matched_jets[3].Eta() << " " << matched_jets[3].Phi() << " " << matched_jets[3].Pt()/1000. << endl;
-    cout << "    a mass     : " << (theBS[2] + theBS[3]).M()/1000. << endl;
-    cout << "    dijet mass : " << (matched_jets[2] + matched_jets[3]).M()/1000. << endl;
-
+      
   }
   return 0;
 
