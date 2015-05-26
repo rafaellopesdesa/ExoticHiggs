@@ -3,12 +3,15 @@
 
 #include <vector>
 
-class GenVertex_p5
+#include "TObject.h"
+
+class GenVertex_p5 : public TObject
 { 
 
  public: 
 
   GenVertex_p5();
+  ~GenVertex_p5();
 
   float m_x;
   float m_y;
@@ -19,6 +22,8 @@ class GenVertex_p5
   int m_id;
   std::vector<float> m_weights;
   int m_barcode;
+
+  ClassDef(GenVertex_p5, 1);
 
 }; 
 

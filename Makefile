@@ -15,7 +15,8 @@ BINARIES = $(wildcard $(BINDIR)/*.cc)
 OBJECTS = $(patsubst %,$(OBJDIR)/%.o,$(basename $(notdir $(SOURCES)))) 
 GENHEADERS = generator/GenParticle_p5.h generator/GenEvent_p5.h generator/GenVertex_p5.h generator/McEventCollection_p5.h
 LIBS = -L./HepMC/lib/ -lHepMC -lHepMCfio -L./fastjet/lib/ -lfastjet
-EXE = reader.exe # analysis.exe
+EXE = reader.exe analysis.exe
+
 .PHONY: all
 
 all: $(EXE)

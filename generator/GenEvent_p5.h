@@ -5,11 +5,14 @@
 #include <vector>
 #include <utility> //> for std::pair
 
-class GenEvent_p5
+#include "TObject.h"
+
+class GenEvent_p5 : public TObject
 { 
  public: 
 
   GenEvent_p5();
+  ~GenEvent_p5();
 
   int m_signalProcessId;
   int m_eventNbr;
@@ -32,6 +35,7 @@ class GenEvent_p5
   unsigned int m_particlesBegin;
   unsigned int m_particlesEnd;
 
+  ClassDef(GenEvent_p5, 1);
 
 }; 
 

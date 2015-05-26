@@ -14,11 +14,14 @@ int main() {
   TTree* CollectionTree = (TTree*) f->Get("CollectionTree");
   TBranch* branch = CollectionTree->GetBranch("McEventCollection_p5_GEN_EVENT");
   McEventCollection_p5* event = 0;
+  
+  branch->SetAddress(&event);
 
-
-  CollectionTree->SetBranchAddress("McEventCollection_p5_GEN_EVENT", &event);
-  std::cout << branch->GetEntry(100) << std::endl;
+  std::cout << branch->GetEntry(102) << std::endl;
+  std::cout << branch->GetEntry(103) << std::endl;
   std::cout << event->m_genParticles.size() << std::endl;
+  std::cout << event->m_genParticles[100].m_m << std::endl;
+  //  delete event;
 
   
 }

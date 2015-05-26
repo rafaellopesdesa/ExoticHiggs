@@ -14,11 +14,11 @@
 #pragma link C++ class std::vector<double>;
 #pragma link C++ class std::vector<long int>;
 #pragma link C++ class std::vector<float>;
-// #pragma link C++ class GenEvent_p5;
-// #pragma link C++ class GenVertex_p5;
-// #pragma link C++ class GenParticle_p5;
+#pragma link C++ class GenEvent_p5;
+#pragma link C++ class GenVertex_p5;
+#pragma link C++ class GenParticle_p5;
 #pragma link C++ class std::vector<GenEvent_p5>;
 #pragma link C++ class std::vector<GenVertex_p5>;
 #pragma link C++ class std::vector<GenParticle_p5>;
 
-// #pragma link C++ class McEventCollection_p5;
+#pragma link C++ class McEventCollection_p5;

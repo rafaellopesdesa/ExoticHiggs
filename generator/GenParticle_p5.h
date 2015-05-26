@@ -4,13 +4,15 @@
 #include <vector>
 #include <utility> //> for std::pair
 
+#include "TObject.h"
 
-class GenParticle_p5
+class GenParticle_p5 : public TObject
 { 
 
  public: 
 
   GenParticle_p5();
+  ~GenParticle_p5();
 
   float m_px;
   float m_py;
@@ -27,6 +29,8 @@ class GenParticle_p5
   float m_generated_mass;
   short m_recoMethod;
 
+  ClassDef(GenParticle_p5, 1);
+  
 }; 
 
 
