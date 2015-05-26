@@ -3,7 +3,7 @@ INCLUDE = -I../ -I./ -I./HepMC/include -I./fastjet/include
 CFLAGS = -Wall -g $(shell root-config --cflags) $(INCLUDE)
 LINKER = g++
 
-LINKERFLAGS = -undefined dynamic_lookup $(shell root-config --libs) -lEG -lGenVector -lMinuit
+LINKERFLAGS = -undefined dynamic_lookup $(shell root-config --libs) -lEG -lGenVector -lMinuit -headerpad_max_install_names
 
 SRCDIR = src
 OBJDIR = obj
