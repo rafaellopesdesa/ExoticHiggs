@@ -98,17 +98,48 @@ int main(int argc, char** argv){
     vector<TLorentzVector> inclusive_jets_vec;
     for (auto jet : inclusive_jets) {
       TLorentzVector jetvec(jet.px(), jet.py(), jet.pz(), jet.e());
-      if (fabs(jetvec.Eta()) < 4.7 && jetvec.Pt() > 20)
-	inclusive_jets_vec.push_back(jetvec);
+      inclusive_jets_vec.push_back(jetvec);
     }
 
     vector<TLorentzVector> matched_jets;
     for (auto bs : theBS) {
       auto min = min_element(inclusive_jets_vec.begin(), inclusive_jets_vec.end(),
 			     [bs](TLorentzVector v1, TLorentzVector v2)->bool {return bs.DeltaR(v1) < bs.DeltaR(v2);});
-      if (bs.DeltaR(*min) < 0.4) {
-	matched_jets.push_back(*min);
-      }
+      //      if (bs.DeltaR(*min) < R)
+      matched_jets.push_back(*min);
+
+    }
+
+    // Look at the first a->bb
+    cout << "First decay a->bb" << endl;
+    cout << "   b parton 1: " << theBS[0].Eta() << " " << theBS[0].Phi() << " " << theBS[0].Pt()/1000. << endl;
+    cout << "   b parton 2: " << theBS[1].Eta() << " " << theBS[1].Phi() << " " << theBS[1].Pt()/1000. << endl;
+    cout << "   a mass    : " << (theBS[0] + theBS[1]).M()/1000. << endl;
+    cout << "   bb dR     : " << theBS[0].DeltaR(theBS[1]) << endl;
+    if (matched_jets[0] == matched_jets[1]) {
+      cout << "   Merged case! " << endl;
+      cout << "     Fat jet     : " << matched_jets[0].Eta() << " " << matched_jets[0].Phi() << " " << matched_jets[0].Pt()/1000. << endl;
+      cout << "     Jet mass    : " << matched_jets[0].M()/1000. << endl;
+    } else {
+      cout << "   Resolved case! " << endl;
+      cout << "     jet 1       : " << matched_jets[0].Eta() << " " << matched_jets[0].Phi() << " " << matched_jets[0].Pt()/1000. << endl;
+      cout << "     jet 2       : " << matched_jets[1].Eta() << " " << matched_jets[1].Phi() << " " << matched_jets[1].Pt()/1000. << endl;
+      cout << "     dijet mass  : " << (matched_jets[0]+matched_jets[1]).M()/1000. << endl;
+    }
+    cout << "Second decay a->bb" << endl;
+    cout << "   b parton 1: " << theBS[2].Eta() << " " << theBS[2].Phi() << " " << theBS[2].Pt()/1000. << endl;
+    cout << "   b parton 2: " << theBS[3].Eta() << " " << theBS[3].Phi() << " " << theBS[3].Pt()/1000. << endl;
+    cout << "   a mass    : " << (theBS[2] + theBS[3]).M()/1000. << endl;
+    cout << "   bb dR     : " << theBS[2].DeltaR(theBS[3]) << endl;
+    if (matched_jets[2] == matched_jets[3]) {
+      cout << "   Merged case! " << endl;
+      cout << "     Fat jet     : " << matched_jets[2].Eta() << " " << matched_jets[2].Phi() << " " << matched_jets[2].Pt()/1000. << endl;
+      cout << "     Jet mass    : " << matched_jets[2].M()/1000. << endl;
+    } else {
+      cout << "   Resolved case! " << endl;
+      cout << "     jet 1       : " << matched_jets[2].Eta() << " " << matched_jets[2].Phi() << " " << matched_jets[2].Pt()/1000. << endl;
+      cout << "     jet 2       : " << matched_jets[3].Eta() << " " << matched_jets[3].Phi() << " " << matched_jets[3].Pt()/1000. << endl;
+      cout << "     dijet mass  : " << (matched_jets[2]+matched_jets[3]).M()/1000. << endl;
     }
       
   }
