@@ -13,9 +13,11 @@ particleJet::particleJet()
 bool isBhadron(int pdgId)
 {
 
-  if (pdgId >= 500 && pdgId <600) return true;
-  else if (pdgId >= 5000 && pdgId < 6000) return true;
-  else return false;
+  int pdg=abs(pdgId);
+
+  if((pdg>=511 && pdg<=545) || (pdg>=10511 && pdg<=10545) || (pdg>=20511 && pdg<=20545) || (pdg>=5112 && pdg<=5554)) { 
+    return true;
+  } else return false;
   
 }
 

@@ -351,7 +351,7 @@ int main(int argc, char** argv){
       
   }
 
-  fatjet_mass->Fit("gaus", "", "", hypMass-7., hypMass+3.);
+  fatjet_mass->Fit("gaus", "", "", hypMass-12., hypMass+7.);
   fatjet_pruned_mass->Fit("gaus", "", "", hypMass-7., hypMass+3.);
   subjet_mass->Fit("gaus", "", "", hypMass-7., hypMass+3.);
   subjet_mass_mdpieces->Fit("gaus", "", "", hypMass-7., hypMass+3.);
