@@ -351,12 +351,12 @@ int main(int argc, char** argv){
       
   }
 
-  fatjet_mass->Fit("gaus", "", "", hypMass-5., hypMass+5.);
-  fatjet_pruned_mass->Fit("gaus", "", "", hypMass-5., hypMass+5.);
-  subjet_mass->Fit("gaus", "", "", hypMass-5., hypMass+5.);
-  subjet_mass_mdpieces->Fit("gaus", "", "", hypMass-5., hypMass+5.);
-  bsubjet_mass->Fit("gaus", "", "", hypMass-5., hypMass+5.);
-  bsubjet_mass_mdpieces->Fit("gaus", "", "", hypMass-5., hypMass+5.);
+  fatjet_mass->Fit("gaus", "", "", hypMass-7., hypMass+3.);
+  fatjet_pruned_mass->Fit("gaus", "", "", hypMass-7., hypMass+3.);
+  subjet_mass->Fit("gaus", "", "", hypMass-7., hypMass+3.);
+  subjet_mass_mdpieces->Fit("gaus", "", "", hypMass-7., hypMass+3.);
+  bsubjet_mass->Fit("gaus", "", "", hypMass-7., hypMass+3.);
+  bsubjet_mass_mdpieces->Fit("gaus", "", "", hypMass-7., hypMass+3.);
 
   cout << "---- REPORT ----" << endl;
   cout << "Acceptance: " << endl << "   " << 100*acc/((double) nentries) << "%" << endl;
