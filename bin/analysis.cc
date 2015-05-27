@@ -32,6 +32,7 @@
 #include "TVector2.h"
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TF1.h"
 #include "TDatabasePDG.h"
 #include "TParticlePDG.h"
 
@@ -90,7 +91,7 @@ int main(int argc, char** argv){
   // files
   const char* dataFileName = reader.Get("io", "data_file_name", "UNKNOWN").c_str();
   const char* outputFileName = reader.Get("io", "result_file_name", "UNKNOWN").c_str();
-  
+  double hypMass = reader.GetReal("io", "hyp_mass", 20.);
   
   // Histograms to do
   TH1D* bparton_pt = new TH1D("bparton_pt", "bparton_pt", 100, 0., 150.);
@@ -346,12 +347,29 @@ int main(int argc, char** argv){
       }
       if (gbb >= 2) acc++;
       
-    }
-      
-    
+    }         
       
   }
-  cout << "Acceptance: " << 100*acc/((double) nentries) << "%" << endl;
+
+  fatjet_mass->Fit("gaus", "", "", hypMass-10., hypMass+10.);
+  fatjet_pruned_mass->Fit("gaus", "", "", hypMass-10., hypMass+10.);
+  subjet_mass->Fit("gaus", "", "", hypMass-10., hypMass+10.);
+  subjet_mass_mdpieces->Fit("gaus", "", "", hypMass-10., hypMass+10.);
+  bsubjet_mass->Fit("gaus", "", "", hypMass-10., hypMass+10.);
+  bsubjet_mass_mdpieces->Fit("gaus", "", "", hypMass-10., hypMass+10.);
+
+  cout << "---- REPORT ----" << endl;
+  cout << "Acceptance: " << endl << "   " << 100*acc/((double) nentries) << "%" << endl;
+  cout << "Mass resolution: " << endl;
+  cout << "   fat jet mass: " << 100.*((TF1*) fatjet_mass->GetListOfFunctions()->At(0))->GetParameter(2)/hypMass << "%" << endl;
+  cout << "   pruned fat jet mass: " << 100.*((TF1*) fatjet_pruned_mass->GetListOfFunctions()->At(0))->GetParameter(2)/hypMass << "%" << endl;
+  cout << "   AK04 subjet mass: " << 100.*((TF1*) subjet_mass->GetListOfFunctions()->At(0))->GetParameter(2)/hypMass << "%" << endl;
+  cout << "   MD subjet mass: " << 100.*((TF1*) subjet_mass_mdpieces->GetListOfFunctions()->At(0))->GetParameter(2)/hypMass << "%" << endl;
+  cout << "   btagged AK04 subjet mass: " << 100.*((TF1*) bsubjet_mass->GetListOfFunctions()->At(0))->GetParameter(2)/hypMass << "%" << endl;
+  cout << "   btagged MD subjet mass: " << 100.*((TF1*) bsubjet_mass_mdpieces->GetListOfFunctions()->At(0))->GetParameter(2)/hypMass << "%" << endl;
+
+
+
   dataFile->Close();
   TFile* resultFile = TFile::Open(outputFileName, "RECREATE");
 
@@ -372,7 +390,7 @@ int main(int argc, char** argv){
   subjet_mass->Write();
   bsubjet_mass_mdpieces->Write();
   bsubjet_mass->Write();
-
+    
   resultFile->Close();
   return 0;
 
