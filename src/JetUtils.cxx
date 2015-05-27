@@ -2,38 +2,13 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>  // needed for internal io
+#include <iomanip>  
 
 using namespace std;
 
 particleJet::particleJet()
 {}
-
-particleJet::particleJet(TLorentzVector _jet, bool _isBjet) :
-  jet(_jet),
-  isBjet(_isBjet)
-{}
-  
-
-std::ostream& operator<<(std::ostream& os, const particleJet jet)
-{
-
-  os << jet.jet.Px() << " " << jet.jet.Py() << " " << jet.jet.Pz() << " " << jet.jet.E() << " " << jet.isBjet << " " << jet.jet.Eta() << " " << jet.jet.Phi() << " " << jet.jet.Pt()/1000. << endl;
-  for (auto parton : jet.parton) {
-    TLorentzVector _temp;
-    _temp.SetXYZM(parton->m_px,parton->m_py,parton->m_pz,parton->m_m);
-    os << "   matched parton: " << parton->m_px << " " << parton->m_py << " " << parton->m_pz << " " << parton->m_pdgId << " " << _temp.Eta() << " " << _temp.Phi() << " " << _temp.Pt()/1000. << endl;
-  }
-  return os;      
-}
-
-std::ostream& operator<<(std::ostream& os, const GenParticle_p5 parton)
-{
-
-  TLorentzVector _temp;
-  _temp.SetXYZM(parton.m_px,parton.m_py,parton.m_pz,parton.m_m);
-  os << parton.m_px << " " << parton.m_py << " " << parton.m_pz << " " << parton.m_pdgId << " " << _temp.Eta() << " " << _temp.Phi() << " " << _temp.Pt()/1000.;
-  return os;      
-}
 
 bool isBhadron(int pdgId)
 {
@@ -44,7 +19,7 @@ bool isBhadron(int pdgId)
   
 }
 
-bool isBjet(fastjet::PseudoJet& jet)
+bool isBjet(const fastjet::PseudoJet& jet)
 {
 
   vector<fastjet::PseudoJet> constituents = jet.constituents();
@@ -54,7 +29,7 @@ bool isBjet(fastjet::PseudoJet& jet)
   
 }
 
-bool isBpartonJet(fastjet::PseudoJet& jet, int parton)
+bool isBpartonJet(const fastjet::PseudoJet& jet, int parton)
 {
 
   vector<fastjet::PseudoJet> constituents = jet.constituents();
@@ -73,7 +48,6 @@ std::vector<int> findPartonHadrons(int parton, std::vector<GenParticle_p5>& part
   prodVtx.push_back(partList[parton].m_endVtx);
 
   for (int index = parton; index < partList.size(); index++) {
-    //    for (auto ii : prodVtx) cout << ii << " "; cout << endl;
     if (find(prodVtx.begin(), prodVtx.end(), partList[index].m_prodVtx) != prodVtx.end()) {
       if (partList[index].m_status == 1)
 	retval.push_back(index);
@@ -122,4 +96,30 @@ std::vector< std::vector<int> > findBHdecays(std::vector<GenParticle_p5>& partLi
   
 
 
-  
+ ostream& operator<<(std::ostream & os, const fastjet::PseudoJet& jet)
+{
+  os << jet.px() << " " << jet.py() << " " << jet.pz() << " " << jet.e() << " " << ::isBjet(jet) << " " << jet.eta() << " " << jet.phi() << " " << jet.pt()/1000. << endl;
+  return os;
+}
+
+
+std::ostream& operator<<(std::ostream& os, const particleJet jet)
+{
+
+  os << jet.jet.Px() << " " << jet.jet.Py() << " " << jet.jet.Pz() << " " << jet.jet.E() << " " << jet.isBjet << " " << jet.jet.Eta() << " " << jet.jet.Phi() << " " << jet.jet.Pt()/1000. << endl;
+  for (auto parton : jet.parton) {
+    TLorentzVector _temp;
+    _temp.SetXYZM(parton->m_px,parton->m_py,parton->m_pz,parton->m_m);
+    os << "   matched parton: " << parton->m_px << " " << parton->m_py << " " << parton->m_pz << " " << parton->m_pdgId << " " << _temp.Eta() << " " << _temp.Phi() << " " << _temp.Pt()/1000. << endl;
+  }
+  return os;      
+}
+
+std::ostream& operator<<(std::ostream& os, const GenParticle_p5 parton)
+{
+
+  TLorentzVector _temp;
+  _temp.SetXYZM(parton.m_px,parton.m_py,parton.m_pz,parton.m_m);
+  os << parton.m_px << " " << parton.m_py << " " << parton.m_pz << " " << parton.m_pdgId << " " << _temp.Eta() << " " << _temp.Phi() << " " << _temp.Pt()/1000.;
+  return os;      
+}

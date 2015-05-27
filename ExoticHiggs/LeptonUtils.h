@@ -4,5 +4,8 @@
 
 #include <vector>
 
+#include "TLorentzVector.h"
+
 int findHardScatterLepton(std::vector<GenParticle_p5>& partList);
 double LeptonIsolation(fastjet::PseudoJet& lepton, std::vector<fastjet::PseudoJet>& jetList, double Rmin, double Rmax);
+double LeptonMiniIsolation(GenParticle_p5& lepton, std::vector<GenParticle_p5>& partList);

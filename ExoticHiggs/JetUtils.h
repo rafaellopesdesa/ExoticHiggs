@@ -11,19 +11,26 @@
 std::vector<int> findPartonHadrons(int parton, std::vector<GenParticle_p5>& partList);
 std::vector< std::vector<int> > findBHdecays(std::vector<GenParticle_p5>& partList);
 bool isBhadron(int pdgId);
-bool isBjet(fastjet::PseudoJet& jet);
-bool isBpartonJet(fastjet::PseudoJet& jet, int parton);
+bool isBjet(const fastjet::PseudoJet& jet);
+bool isBpartonJet(const fastjet::PseudoJet& jet, int parton);
 
 class particleJet {
 
  public:
 
   particleJet();
-  particleJet(TLorentzVector _jet, bool _isBjet=false);
-  
-  TLorentzVector jet;
-  bool isBjet;
 
+  TLorentzVector jet;
+  fastjet::PseudoJet pseudoJet;  
+  bool isBjet;
+  
+  // Subjet information
+  bool hasSubstructure;
+  fastjet::PseudoJet pruned_pseudoJet;
+  std::vector<fastjet::PseudoJet> pieces;
+  std::vector<fastjet::PseudoJet> subjets;
+  std::vector<int> subjets_btag;
+  
   std::vector<GenParticle_p5*> parton;
   
 };
@@ -33,5 +40,6 @@ class particleJet {
 
 std::ostream& operator<<(std::ostream& os, const particleJet jet);
 std::ostream& operator<<(std::ostream& os, const GenParticle_p5 parton);
+std::ostream& operator<<(std::ostream& ostr, const fastjet::PseudoJet& jet);
 
 
