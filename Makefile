@@ -14,6 +14,7 @@ SOURCES = $(wildcard $(SRCDIR)/*.cxx) $(patsubst $(LNKDIR)/%_linkdef.h,$(SRCDIR)
 BINARIES = $(wildcard $(BINDIR)/*.cc)
 OBJECTS = $(patsubst %,$(OBJDIR)/%.o,$(basename $(notdir $(SOURCES)))) 
 GENHEADERS = generator/GenParticle_p5.h generator/GenEvent_p5.h generator/GenVertex_p5.h generator/McEventCollection_p5.h
+INIHHEADERS = inih/INIReader.h
 LIBS = -L./HepMC/lib/ -lHepMC -lHepMCfio -L./fastjet/lib/ -lfastjet -lfastjettools -lfastjetplugins -lsiscone -lsiscone_spherical
 EXE = reader.exe analysis.exe
 

@@ -20,6 +20,8 @@
 #include "generator/McEventCollection_p5.h"
 #include "generator/GenParticle_p5.h"
 
+#include "inih/INIReader.h"
+
 #include "ExoticHiggs/LeptonUtils.h"
 #include "ExoticHiggs/JetUtils.h"
 
@@ -44,37 +46,46 @@ using namespace std;
 int main(int argc, char** argv){
 
   // Parameters
-
+  if (argc != 2) {
+    cout << "analysis.exe [configFile]" << endl;
+    return 0;
+  }
+  INIReader reader(argv[1]);
+  if (reader.ParseError() < 0) {
+    std::cout << "Can't load " << argv[1] << endl;
+    return 1;
+  }
+  
   // Fat jet definition
-  double fat_R = 1.0;
+  double fat_R = reader.GetInteger("fatjet", "R", 1.0);
   fastjet::JetDefinition fat_jet_def(fastjet::cambridge_algorithm, fat_R);
 
   // Fat jet selection
-  double jet_ptmin = 40000.0;
-  double jet_etamax = 2.6;
+  double jet_ptmin = reader.GetReal("fatjet", "ptmin", 40000.0);
+  double jet_etamax = reader.GetReal("fatjet", "etamax", 2.6);
 
   // Substructure tagger
-  double mu_thr = 0.667;
-  double y_thr = 0.09;    
+  double mu_thr = reader.GetReal("mdtagger", "mu_thr", 0.667);
+  double y_thr = reader.GetReal("mdtagger", "y_thr", 0.09);    
 
   // Prunning
-  bool doPrunning = true;
-  double zcut = 0.1;
-  double rcut_factor = 0.5;
+  bool doPrunning = reader.GetBoolean("prunning", "doPrunning", true);
+  double zcut = reader.GetReal("prunning", "zcut", 0.1);
+  double rcut_factor = reader.GetReal("prunning", "rcut_factor", 0.5);
   
   // Lepton selection
-  double lep_ptmin = 26000.0;
-  double lep_etamax = 2.4;
-  double lep_isomax = 0.5; // mini iso limit
+  double lep_ptmin = reader.GetReal("lepton", "lep_ptmin", 26000.0);
+  double lep_etamax = reader.GetReal("lepton", "lep_etamax", 2.4);
+  double lep_isomax = reader.GetReal("lepton", "lep_isomax", 0.5); // mini iso limit
 
   // Ghost factor for truth-level B-jet tagging
-  double ghost_factor = 1.e-21;
+  double ghost_factor = reader.GetReal("btagging", "ghost_factor", 1.e-21);
 
   // Sub jet definition
-  double sub_R = 0.4;
+  double sub_R = reader.GetReal("subjet", "R", 0.4);
   fastjet::JetDefinition sub_jet_def(fastjet::antikt_algorithm, sub_R);
-  double sub_jet_ptmin = 5000.0;
-  bool use_only_charged = false;
+  double sub_jet_ptmin = reader.GetReal("subjet", "ptmin", 5000.0);
+  bool use_only_charged = reader.GetBoolean("subjet", "use_only_charged", false);
 
   // Histograms to do
   TH1D* bparton_pt = new TH1D("bparton_pt", "bparton_pt", 100, 0., 150.);
@@ -96,11 +107,6 @@ int main(int argc, char** argv){
   TH1D* bsubjet_mass = new TH1D("bsubjet_mass", "bsubjet_mass", 100, 0., 150.);
   
   
-  if (argc != 3) {
-    cout << "analysis.exe [eventFile] [outputFile]" << endl;
-    return 0;
-  }
-
   TDatabasePDG *db= TDatabasePDG::Instance();
 
   // Gets the input and stores in fastjet
