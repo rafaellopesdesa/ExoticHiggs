@@ -17,6 +17,8 @@ GENHEADERS = generator/GenParticle_p5.h generator/GenEvent_p5.h generator/GenVer
 LIBS = -L./HepMC/lib/ -lHepMC -lHepMCfio -L./fastjet/lib/ -lfastjet
 EXE = reader.exe analysis.exe
 
+.PRECIOUS: $(OBJDIR)/%.o $(SRCDIR)/%_dict.cxx
+
 .PHONY: all
 
 all: $(EXE)
