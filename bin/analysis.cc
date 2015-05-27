@@ -87,6 +87,11 @@ int main(int argc, char** argv){
   double sub_jet_ptmin = reader.GetReal("subjet", "ptmin", 5000.0);
   bool use_only_charged = reader.GetBoolean("subjet", "use_only_charged", false);
 
+  // files
+  const char* dataFileName = reader.Get("io", "data_file_name", "UNKNOWN").c_str();
+  const char* outputFileName = reader.Get("io", "result_file_name", "UNKNOWN").c_str();
+  
+  
   // Histograms to do
   TH1D* bparton_pt = new TH1D("bparton_pt", "bparton_pt", 100, 0., 150.);
   TH1D* bbar_dR = new TH1D("bbar_dR", "bbar_dR", 100, 0., 5.);
@@ -111,7 +116,7 @@ int main(int argc, char** argv){
 
   // Gets the input and stores in fastjet
   std::vector<fastjet::PseudoJet> input_particles;
-  TFile* dataFile = TFile::Open(argv[1]);
+  TFile* dataFile = TFile::Open(dataFileName);
   TTree* CollectionTree = (TTree*) dataFile->Get("CollectionTree");
   TBranch* branch = CollectionTree->GetBranch("McEventCollection_p5_GEN_EVENT");
   McEventCollection_p5* event = 0;
@@ -123,6 +128,7 @@ int main(int argc, char** argv){
   
   Long64_t nentries = CollectionTree->GetEntries();
   cout << "Reading " << nentries << " events" << endl;
+  double acc = 0.;
   for (Long64_t ievt=0; ievt<nentries; ievt++) {
     if (ievt % 500 == 0) cout << "Event  " << ievt << endl;
     
@@ -271,11 +277,8 @@ int main(int argc, char** argv){
 	fabs(Vlepton_vec.Eta()) < lep_etamax &&
 	!(abs(Vlepton_part.m_pdgId) == 11 && LeptonMiniIsolation(Vlepton_part, event->m_genParticles) > lep_isomax))
       selected_lepton.push_back(Vlepton_vec);
-
-    // now do the analysis
-
+    
     // Truth level, before selection
-
     TLorentzVector b1, b2, b3, b4;
     b1.SetXYZM(event->m_genParticles[theBHdecays[0][0]].m_px, event->m_genParticles[theBHdecays[0][0]].m_py, event->m_genParticles[theBHdecays[0][0]].m_pz, event->m_genParticles[theBHdecays[0][0]].m_m);
     b2.SetXYZM(event->m_genParticles[theBHdecays[0][1]].m_px, event->m_genParticles[theBHdecays[0][1]].m_py, event->m_genParticles[theBHdecays[0][1]].m_pz, event->m_genParticles[theBHdecays[0][1]].m_m);
@@ -300,6 +303,7 @@ int main(int argc, char** argv){
     if (selected_lepton.size() > 0) {
       njets->Fill(selected_jets.size());
 
+      vector<int> nbb; // number of b subjets
       int nb = 0;
       for (auto jet : selected_jets) {       
 	if (jet.isBjet) nb++;
@@ -321,24 +325,35 @@ int main(int argc, char** argv){
 	    }
 	  }
 	  nbsubjet->Fill(nbsub);
-
+	  nbb.push_back(nbsub);
+	  
 	  subjet_mass_mdpieces->Fill((jet.pieces[0]+jet.pieces[1]).m()/1000.);
 	  subjet_mass->Fill((jet.subjets[0]+jet.subjets[1]).m()/1000.);
 
 	  if (isBjet(jet.pieces[0]) && isBjet(jet.pieces[1]))
 	    bsubjet_mass_mdpieces->Fill((jet.pieces[0]+jet.pieces[1]).m()/1000.);
-	  if (nbsub >= 2)
+	  if (nbsub >= 2) {
 	    bsubjet_mass->Fill((jet.subjets[bsub1]+jet.subjets[bsub2]).m()/1000.);
+	  }
 	}
       }
       nbjets->Fill(nb);
+
+      // Acceptance calculation
+      int gbb = 0;
+      for (auto ibb : nbb) {
+	if (ibb >= 2) gbb++;
+      }
+      if (gbb >= 2) acc++;
+      
     }
       
     
       
   }
+  cout << "Acceptance: " << 100*acc/((double) nentries) << "%" << endl;
   dataFile->Close();
-  TFile* resultFile = TFile::Open(argv[2], "RECREATE");
+  TFile* resultFile = TFile::Open(outputFileName, "RECREATE");
 
   bparton_pt->Write();
   bbar_dR->Write();
