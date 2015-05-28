@@ -3,28 +3,66 @@
 #include <cmath>
 #include <iostream>
 
+using namespace std;
 
-int findHardScatterLepton(std::vector<GenParticle_p5>& partList)
+int findHardScatterLepton(std::vector<GenParticle_p5>& partList, bool isPythia6)
 {
-
+  
   int index = -1;
-  int prodVtx = 1;
-  for (auto part : partList) {
-    index++;
-    if ((abs(part.m_pdgId) == 24 || abs(part.m_pdgId) == 23) && part.m_status == 22) {
-      prodVtx = part.m_endVtx;
-    }
-    if ((abs(part.m_pdgId) == 24 || abs(part.m_pdgId) == 23) && part.m_prodVtx == prodVtx) {
-      prodVtx = part.m_endVtx;
-    }
-    if ((abs(part.m_pdgId) == 11 || abs(part.m_pdgId) == 13) && part.m_prodVtx == prodVtx) {
-      if (part.m_status == 1) {
-	break;
-      } else {
+  bool found = false;
+  if (!isPythia6) {
+    int prodVtx = 1;
+    for (auto part : partList) {
+      index++;
+      if ((abs(part.m_pdgId) == 24 || abs(part.m_pdgId) == 23) && part.m_status == 22 && prodVtx > 0) {
 	prodVtx = part.m_endVtx;
       }
+      if ((abs(part.m_pdgId) == 24 || abs(part.m_pdgId) == 23) && part.m_prodVtx == prodVtx) {
+	prodVtx = part.m_endVtx;
+      }
+      if (abs(part.m_pdgId) == 15 && part.m_prodVtx == prodVtx) {
+	prodVtx = part.m_endVtx;
+      }
+      if ((abs(part.m_pdgId) == 11 || abs(part.m_pdgId) == 13) && part.m_prodVtx == prodVtx) {
+	if (part.m_status == 1) {
+	  found = true;
+	  break;
+	} else {
+	  prodVtx = part.m_endVtx;
+	}
+      }
+    }
+  } else {
+    int prodVtx = 1;
+    TLorentzVector status3_lep;
+    for (auto part : partList) {
+      index++;
+      if ((abs(part.m_pdgId) == 24 || abs(part.m_pdgId) == 23) && part.m_status == 3 && prodVtx > 0) {
+	prodVtx = part.m_endVtx;
+      }
+      if ((abs(part.m_pdgId) == 24 || abs(part.m_pdgId) == 23) && part.m_prodVtx == prodVtx) {
+	prodVtx = part.m_endVtx;
+      }
+      if (abs(part.m_pdgId) == 15 && part.m_prodVtx == prodVtx) {
+	prodVtx = part.m_endVtx;
+      }
+      if ((abs(part.m_pdgId) == 11 || abs(part.m_pdgId) == 13) && part.m_prodVtx == prodVtx) {
+	if (part.m_status == 3) {
+	  status3_lep.SetXYZM(part.m_px,part.m_py,part.m_pz,part.m_m);
+	} else {
+	  prodVtx = part.m_endVtx;
+	}
+      }
+      if ((abs(part.m_pdgId) == 11 || abs(part.m_pdgId) == 13) && part.m_status == 1) {
+	TLorentzVector v1; v1.SetXYZM(part.m_px,part.m_py,part.m_pz,part.m_m);
+	if (status3_lep.DeltaR(v1) < 0.1) {
+	  found = true;
+	  break;
+	}
+      }      
     }
   }
+  if (!found) return -1;
   return index;
 }
 

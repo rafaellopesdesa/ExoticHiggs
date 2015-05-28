@@ -97,7 +97,8 @@ int main(int argc, char** argv){
   const char* outputFileName = reader.Get("io", "result_file_name", "UNKNOWN").c_str();
   double hypMass = reader.GetReal("io", "hyp_mass", 20.);
   bool isSignal = reader.GetBoolean("io", "isSignal", false);
-  
+  bool isPythia6 = reader.GetBoolean("io", "isPythia6", false);
+
   // Histograms to do
   TH1D* bparton_pt = new TH1D("bparton_pt", "bparton_pt", 100, 0., 150.);
   TH1D* bbar_dR = new TH1D("bbar_dR", "bbar_dR", 100, 0., 5.);
@@ -116,7 +117,7 @@ int main(int argc, char** argv){
   TH1D* subjet_mass = new TH1D("subjet_mass", "subjet_mass", 100, 0., 150.);
   TH1D* bsubjet_mass_mdpieces = new TH1D("bsubjet_mass_mdpieces", "bsubjet_mass_mdpieces", 100, 0., 150.);
   TH1D* bsubjet_mass = new TH1D("bsubjet_mass", "bsubjet_mass", 100, 0., 150.);
-  TH1D* cutflow_h = new TH1D("cutflow", "cutflow", 8, 0., 8.);
+  TH1D* cutflow_h = new TH1D("cutflow", "cutflow", 9, 0., 9.);
   
   TDatabasePDG *db= TDatabasePDG::Instance();
 
@@ -125,7 +126,7 @@ int main(int argc, char** argv){
   TChain* CollectionTree = new TChain("CollectionTree");
   TFileCollection fc("dum","",dataFileName);
   CollectionTree->AddFileInfoList((TCollection*) fc.GetList());
-  TBranch* branch = CollectionTree->GetBranch("McEventCollection_p5_GEN_EVENT");
+  //  TBranch* branch = CollectionTree->GetBranch("McEventCollection_p5_GEN_EVENT");
   McEventCollection_p5* event = 0;
 
   // I don't care about the other information
@@ -137,15 +138,16 @@ int main(int argc, char** argv){
   cout << "Reading " << nentries << " events" << endl;
 
 
-  double cutflow[] = {0.,0.,0.,0.,0.,0.,0.,0.};
+  double cutflow[] = {0.,0.,0.,0.,0.,0.,0.,0.,0.};
   cutflow_h->GetXaxis()->SetBinLabel(1, "all");
-  cutflow_h->GetXaxis()->SetBinLabel(2, "lep pt");
-  cutflow_h->GetXaxis()->SetBinLabel(3, "lep eta");
-  cutflow_h->GetXaxis()->SetBinLabel(4, "lep iso");
-  cutflow_h->GetXaxis()->SetBinLabel(5, "2 jets");
-  cutflow_h->GetXaxis()->SetBinLabel(6, "substructure");
-  cutflow_h->GetXaxis()->SetBinLabel(7, "2 subjets");
-  cutflow_h->GetXaxis()->SetBinLabel(8, "2 b subjets");
+  cutflow_h->GetXaxis()->SetBinLabel(2, "1 lep");  
+  cutflow_h->GetXaxis()->SetBinLabel(3, "lep pt");
+  cutflow_h->GetXaxis()->SetBinLabel(4, "lep eta");
+  cutflow_h->GetXaxis()->SetBinLabel(5, "lep iso");
+  cutflow_h->GetXaxis()->SetBinLabel(6, "2 jets");
+  cutflow_h->GetXaxis()->SetBinLabel(7, "substructure");
+  cutflow_h->GetXaxis()->SetBinLabel(8, "2 subjets");
+  cutflow_h->GetXaxis()->SetBinLabel(9, "2 b subjets");
   
   // all, lepton pt, lepton eta, lepton iso, 2 jets, 2 jets with substructure, 2 jet with 2 jets, 2 jets with 2 bjets
   for (Long64_t ievt=0; ievt<nentries; ievt++) {
@@ -163,7 +165,7 @@ int main(int argc, char** argv){
     // Again kind of an overkill, but ok.
     vector<vector<int>> theBHdecays = findBHdecays(event->m_genParticles);
 
-    int theHL = findHardScatterLepton(event->m_genParticles);
+    int theHL = findHardScatterLepton(event->m_genParticles, isPythia6);
     fastjet::PseudoJet Vlepton_jet;
     TLorentzVector Vlepton_vec;
     GenParticle_p5 Vlepton_part;
@@ -263,7 +265,7 @@ int main(int argc, char** argv){
       if (!(tagged == 0)) {
 	partJet.hasSubstructure = true;
 
-	input_particles.clear();
+	std::vector<fastjet::PseudoJet> charged_input_particles;
 	fastjet::PseudoJet pruned_jet;
 	if (doPrunning)
 	  pruned_jet= pruner(jet);
@@ -271,17 +273,20 @@ int main(int argc, char** argv){
 	  pruned_jet = jet;
 	partJet.pruned_pseudoJet = pruned_jet;
 
-	input_particles = pruned_jet.constituents();
 	if (use_only_charged) {
-	  for (auto ipart = input_particles.begin(); ipart != input_particles.end(); ipart++) {
-	    if (ipart->user_index() > 0) {
-	      if ((db->GetParticle(event->m_genParticles[ipart->user_index()].m_pdgId))->Charge() == 0)
-		input_particles.erase(ipart);
+	  for (auto& ipart : pruned_jet.constituents()) {
+	    if (ipart.user_index() > 0) { 
+	      if ((db->GetParticle(event->m_genParticles[ipart.user_index()].m_pdgId))->Charge() != 0)
+		charged_input_particles.push_back(ipart);
+	    } else {
+	      charged_input_particles.push_back(ipart); // keep the ghosts
 	    }
 	  }
+	} else {
+	  charged_input_particles = pruned_jet.constituents();
 	}
-
-	fastjet::ClusterSequence sub_clust_seq(input_particles, sub_jet_def);    
+	//	cout << "RCLSA " << charged_input_particles.size() << endl;
+	fastjet::ClusterSequence sub_clust_seq(charged_input_particles, sub_jet_def);    
 	vector<fastjet::PseudoJet> sub_inclusive_jets = sorted_by_pt(sub_clust_seq.inclusive_jets(sub_jet_ptmin));
 
 	vector<int> sub_jets_btag;
@@ -299,14 +304,17 @@ int main(int argc, char** argv){
     }
       
     vector<TLorentzVector> selected_lepton;
-    if (Vlepton_vec.Pt() > lep_ptmin) {
+    if (theHL > -1) {
       cutflow[1]++;
-      if (fabs(Vlepton_vec.Eta()) < lep_etamax) {
-	  cutflow[2]++;
+      if (Vlepton_vec.Pt() > lep_ptmin) {
+	cutflow[2]++;
+	if (fabs(Vlepton_vec.Eta()) < lep_etamax) {
+	  cutflow[3]++;
 	  if (LeptonMiniIsolation(Vlepton_part, event->m_genParticles) > lep_isomax) {
-	    cutflow[3]++;
+	    cutflow[4]++;
 	    selected_lepton.push_back(Vlepton_vec);
 	  }
+	}
       }
     }
     
@@ -329,15 +337,17 @@ int main(int argc, char** argv){
       bbar_dR_vs_H_pT->Fill(b1.DeltaR(b2), (b1+b2+b3+b4).Pt()/1000.);
       bbar_dR_vs_H_pT->Fill(b3.DeltaR(b4), (b1+b2+b3+b4).Pt()/1000.);
     }
-    
-    lepton_pt->Fill(Vlepton_vec.Pt()/1000.);
-    lepton_miniiso->Fill(LeptonMiniIsolation(Vlepton_part, event->m_genParticles));
 
+    if (theHL > -1) {
+      lepton_pt->Fill(Vlepton_vec.Pt()/1000.);
+      lepton_miniiso->Fill(LeptonMiniIsolation(Vlepton_part, event->m_genParticles));
+    }
+    
     // Now do lepton selection
     if (selected_lepton.size() > 0) {
       njets->Fill(selected_jets.size());
 
-      if (selected_jets.size() >= 2) cutflow[4]++;
+      if (selected_jets.size() >= 2) cutflow[5]++;
 
       vector<int> cf_jetHasSubstructure;
       vector<int> cf_numberSubjets;
@@ -381,7 +391,9 @@ int main(int argc, char** argv){
 	  nbsubjet->Fill(nbsub);
 	  
 	  subjet_mass_mdpieces->Fill((jet.pieces[0]+jet.pieces[1]).m()/1000.);
-	  subjet_mass->Fill((jet.subjets[0]+jet.subjets[1]).m()/1000.);
+
+	  if (jet.subjets.size() >= 2)
+	    subjet_mass->Fill((jet.subjets[0]+jet.subjets[1]).m()/1000.);
 
 	  if (isBjet(jet.pieces[0]) && isBjet(jet.pieces[1]))
 	    bsubjet_mass_mdpieces->Fill((jet.pieces[0]+jet.pieces[1]).m()/1000.);
@@ -393,28 +405,28 @@ int main(int argc, char** argv){
       nbjets->Fill(nb);
 
       if (count_if(cf_jetHasSubstructure.begin(), cf_jetHasSubstructure.end(), [&](int x){return (x==1);})>=2)
-	cutflow[5]++;
-      if (count_if(cf_numberSubjets.begin(), cf_numberSubjets.end(), [&](int x){return (x>=2);})>=2)
 	cutflow[6]++;
-      if (count_if(cf_numberBsubjets.begin(), cf_numberBsubjets.end(), [&](int x){return (x>=2);})>=2)
+      if (count_if(cf_numberSubjets.begin(), cf_numberSubjets.end(), [&](int x){return (x>=2);})>=2)
 	cutflow[7]++;
+      if (count_if(cf_numberBsubjets.begin(), cf_numberBsubjets.end(), [&](int x){return (x>=2);})>=2)
+	cutflow[8]++;
       
     }         
       
   }
 
-  for (int ibin=1; ibin<=8; ibin++) cutflow_h->SetBinContent(ibin,cutflow[ibin-1]);
+  for (int ibin=1; ibin<=9; ibin++) cutflow_h->SetBinContent(ibin,cutflow[ibin-1]);
   if (isSignal) {
-    fatjet_mass->Fit("gaus", "", "", hypMass-10., hypMass+10.);
-    fatjet_pruned_mass->Fit("gaus", "", "", hypMass-7., hypMass+3.);
-    subjet_mass->Fit("gaus", "", "", hypMass-7., hypMass+3.);
-    subjet_mass_mdpieces->Fit("gaus", "", "", hypMass-7., hypMass+3.);
-    bsubjet_mass->Fit("gaus", "", "", hypMass-7., hypMass+3.);
-    bsubjet_mass_mdpieces->Fit("gaus", "", "", hypMass-7., hypMass+3.);
+    fatjet_mass->Fit("gaus", "", "", hypMass-15., hypMass+5.);
+    fatjet_pruned_mass->Fit("gaus", "", "", hypMass-15., hypMass+5.);
+    subjet_mass->Fit("gaus", "", "", hypMass-15., hypMass+5.);
+    subjet_mass_mdpieces->Fit("gaus", "", "", hypMass-15., hypMass+5.);
+    bsubjet_mass->Fit("gaus", "", "", hypMass-15., hypMass+5.);
+    bsubjet_mass_mdpieces->Fit("gaus", "", "", hypMass-15., hypMass+5.);
   }
   
   cout << "---- REPORT ----" << endl;
-  cout << "Acceptance: " << endl << "   " << 100*cutflow[7]/cutflow[0] << "%" << endl;
+  cout << "Acceptance: " << endl << "   " << 100*cutflow[8]/cutflow[0] << "%" << endl;
 
   if (isSignal) {
     cout << "Mass resolution: " << endl;
